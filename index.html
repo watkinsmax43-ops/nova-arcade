@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova Arcade — Unblocked Browser Games</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Game Scripts (Pure Vanilla JS) -->
+  <script defer src="js/games/pool8ball.js"></script>
+  <script defer src="js/games/dash.js"></script>
+  <script defer src="js/games/game2048.js"></script>
+  <script defer src="js/games/tetris.js"></script>
+  <script defer src="js/games/pong2p.js"></script>
+  <script defer src="js/games/connect4.js"></script>
+  <script defer src="js/games/snake.js"></script>
+  <script defer src="js/games/flappy.js"></script>
+  <script defer src="js/games/breakout.js"></script>
+  <script defer src="js/games/tactical.js"></script>
+  <script defer src="js/games/speedrun.js"></script>
+  <script defer src="js/games/citydriver.js"></script>
+  <script defer src="js/games/storm.js"></script>
+  <script defer src="js/games/meattoss.js"></script>
+  <script defer src="js/games/collection.js"></script>
+  <script defer src="js/games/worlds.js"></script>
+  <script defer src="js/games/branded.js"></script>
+  <script defer src="js/games/requests.js"></script>
+
+  <!-- App Controller -->
+  <script defer src="js/main.js"></script>
+</head>
+<body>
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-logo">🕹️</span>
+        <div>
+          <h1>Nova Arcade</h1>
+          <p class="tagline">Instant Unblocked Games • 1P, 2-Player &amp; Vs Computer</p>
+        </div>
+      </div>
+      <div class="stats-pill" id="game-count-pill">1000 Games Ready</div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <section class="hero-controls">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search games (e.g., 8 ball, 2 player, dash, puzzle)..."
+          autocomplete="off"
+        />
+        <button id="clear-search" class="clear-btn hidden" title="Clear search">✕</button>
+      </div>
+
+      <div class="category-bar" id="category-bar" role="tablist" aria-label="Game categories">
+        <button class="cat-btn active" data-category="All">All Games</button>
+        <button class="cat-btn" data-category="Popular">Popular</button>
+        <button class="cat-btn" data-category="2 Player">2 Player</button>
+        <button class="cat-btn" data-category="Vs Computer">Vs Computer</button>
+        <button class="cat-btn" data-category="Arcade">Arcade</button>
+        <button class="cat-btn" data-category="Puzzle">Puzzle</button>
+      </div>
+    </section>
+
+    <section aria-label="Games catalog">
+      <div id="games-grid" class="games-grid"></div>
+      <div id="empty-state" class="empty-state hidden">
+        <p>No games matched your search. Try another keyword or clear filters!</p>
+        <button id="reset-filters-btn" class="primary-btn">Show All Games</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Nova Arcade — 100% Static HTML, CSS &amp; JavaScript • Ready for GitHub Pages</p>
+    </div>
+  </footer>
+
+  <!-- Game Player Modal -->
+  <div id="game-modal" class="game-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-shell" id="modal-shell">
+      <div class="modal-topbar">
+        <div class="modal-left">
+          <button id="close-modal-btn" class="icon-btn">← Back</button>
+          <h2 id="modal-title">Game</h2>
+        </div>
+        <div class="modal-right">
+          <span id="modal-controls" class="controls-badge"></span>
+          <button id="fullscreen-btn" class="icon-btn" title="Toggle Fullscreen">⛶ Fullscreen</button>
+        </div>
+      </div>
+      <div id="game-stage" class="game-stage"></div>
+    </div>
+  </div>
+</body>
+</html>
