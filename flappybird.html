@@ -6,20 +6,21 @@
   <title>FlappyBird — Nova Arcade</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    body { margin: 0; font-family: system-ui, sans-serif; background: #0b0924; color: #0f172a; display: flex; justify-content: center; padding: 24px; }
+    body { margin: 0; min-height: 100vh; font-family: system-ui, sans-serif; background: #0b0924; color: #f8fafc; display: flex; justify-content: center; padding: 24px; }
     .flappy-shell { width: 100%; max-width: 1180px; }
     .flappy-back { display: inline-block; margin-bottom: 14px; color: #bae6fd; text-decoration: none; font-weight: 700; }
     .wrap { display: grid; grid-template-columns: minmax(0, 860px) 300px; gap: 20px; width: 100%; align-items: start; }
     @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } }
-    canvas { width: 100%; height: auto; aspect-ratio: 860 / 540; border-radius: 12px; border: 1px solid #334155; background: #0f172a; cursor: pointer; display: block; }
-    .panel { background: rgba(22,28,56,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 16px; color: #f8fafc; }
-    h2 { font-size: 16px; margin: 0 0 10px; }
-    .map-btn { width: 100%; padding: 10px 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #64748b; background: rgba(255,255,255,.08); color: #fff; text-align: left; cursor: pointer; font-weight: 600; }
+    canvas { width: 100%; height: auto; aspect-ratio: 860 / 540; border-radius: 14px; border: 1px solid #475569; background: #0f172a; cursor: pointer; display: block; box-shadow: 0 18px 48px rgba(0,0,0,.32); touch-action: manipulation; }
+    .panel { background: rgba(22,28,56,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 18px; color: #f8fafc; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    .map-btn { width: 100%; padding: 11px 12px; margin-bottom: 8px; border-radius: 9px; border: 1px solid #64748b; background: rgba(255,255,255,.08); color: #fff; text-align: left; cursor: pointer; font-weight: 600; transition: background .16s, border-color .16s; }
+    .map-btn:hover { background: rgba(255,255,255,.14); }
     .map-btn.active { border-color: #38bdf8; background: rgba(56,189,248,.16); }
-    .lb-list { list-style: none; padding: 0; margin: 10px 0 0; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; overflow: hidden; }
-    .lb-list li { display: flex; justify-content: space-between; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .lb-list { list-style: none; padding: 0; margin: 10px 0 0; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; overflow: hidden; }
+    .lb-list li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.08); }
     .lb-list li:last-child { border-bottom: none; }
-    .hint { font-size: 12px; color: #cbd5e1; margin-top: 8px; }
+    .hint { font-size: 12px; color: #cbd5e1; margin-top: 9px; }
   </style>
 </head>
 <body>
@@ -27,16 +28,16 @@
     <a class="flappy-back" href="index.html">← Nova Arcade</a>
     <div class="wrap">
       <div>
-        <canvas id="game"></canvas>
-        <div class="hint">Click / Tap / Space / Arrow Up to jump · R to restart</div>
+        <canvas id="game" aria-label="FlappyBird game. Click, tap, or press Space to flap."></canvas>
+        <div class="hint">Click / Tap / Space / Arrow Up to flap · R to restart</div>
       </div>
-      <div class="panel">
+      <aside class="panel">
         <h2>Select Map</h2>
-        <button class="map-btn active" id="btn-barn">Barnyard Barn (Chicken vs Pitchforks)</button>
-        <button class="map-btn" id="btn-bathroom">Bathroom Blitz (Poo vs Toilets)</button>
-        <h2 style="margin-top: 16px;">High Score Leaderboard</h2>
+        <button class="map-btn active" id="btn-barn">🌾 Farmyard Flight</button>
+        <button class="map-btn" id="btn-bathroom">🚽 Bathroom Blitz</button>
+        <h2 style="margin-top: 18px;">High Score Leaderboard</h2>
         <ul class="lb-list" id="leaderboard"></ul>
-      </div>
+      </aside>
     </div>
   </div>
 
@@ -54,7 +55,7 @@
     let mapId = 'barn';
     let state = 'TITLE';
     let score = 0, scrollX = 0, time = 0, lastTs = performance.now();
-    let player = { x: 215, y: PLAY_H * 0.46, vy: 0, r: 15, rot: 0, flap: 0 };
+    let player = { x: 215, y: PLAY_H * .46, vy: 0, r: 15, rot: 0, flap: 0 };
     let obstacles = [];
 
     function loadLeaderboard() {
@@ -74,39 +75,46 @@
       const list = loadLeaderboard();
       list.push({ name: 'You', map: mapId === 'barn' ? 'Barn' : 'Bathroom', score: points });
       list.sort((a, b) => b.score - a.score);
-      const top = list.slice(0, 8);
-      localStorage.setItem(LB_KEY, JSON.stringify(top));
+      try { localStorage.setItem(LB_KEY, JSON.stringify(list.slice(0, 8))); } catch {}
       renderLeaderboard();
     }
 
     function renderLeaderboard() {
-      const list = loadLeaderboard();
-      lbEl.innerHTML = list.map((e, i) => `<li><span>#${i + 1} ${e.name} (${e.map})</span><strong>${e.score}</strong></li>`).join('');
+      lbEl.innerHTML = loadLeaderboard()
+        .map((entry, i) => `<li><span>#${i + 1} ${entry.name} (${entry.map})</span><strong>${entry.score}</strong></li>`)
+        .join('');
     }
 
     function resetGame(nextState = 'TITLE') {
       state = nextState;
       score = 0;
       obstacles = [];
-      player = { x: 215, y: PLAY_H * 0.46, vy: 0, r: 15, rot: 0, flap: 0 };
+      player = { x: 215, y: PLAY_H * .46, vy: 0, r: 15, rot: 0, flap: 0 };
     }
 
     function jump() {
       if (state === 'TITLE' || state === 'GAME_OVER') resetGame('PLAYING');
       if (state === 'PLAYING') {
         player.vy = JUMP_V;
-        player.flap = 0.22;
+        player.flap = .22;
       }
     }
 
-    btnBarn.onclick = () => { mapId = 'barn'; btnBarn.classList.add('active'); btnBath.classList.remove('active'); resetGame('TITLE'); };
-    btnBath.onclick = () => { mapId = 'bathroom'; btnBath.classList.add('active'); btnBarn.classList.remove('active'); resetGame('TITLE'); };
+    btnBarn.onclick = () => {
+      mapId = 'barn'; btnBarn.classList.add('active'); btnBath.classList.remove('active'); resetGame('TITLE');
+    };
+    btnBath.onclick = () => {
+      mapId = 'bathroom'; btnBath.classList.add('active'); btnBarn.classList.remove('active'); resetGame('TITLE');
+    };
 
-    canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
-    window.addEventListener('keydown', (e) => {
-      if (e.repeat) return;
-      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); jump(); }
-      else if (e.code === 'KeyR') { resetGame('PLAYING'); jump(); }
+    canvas.addEventListener('pointerdown', (event) => { event.preventDefault(); jump(); });
+    window.addEventListener('keydown', (event) => {
+      if (event.repeat) return;
+      if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW') {
+        event.preventDefault(); jump();
+      } else if (event.code === 'KeyR') {
+        resetGame('PLAYING'); jump();
+      }
     });
 
     function spawnObstacleIfNeeded() {
@@ -126,100 +134,219 @@
       const cx = Math.max(left, Math.min(player.x, right));
       const cyTop = Math.min(player.y, topBottom);
       const cyBot = Math.max(player.y, botTop);
-      const r2 = player.r * player.r;
-      return ((player.x - cx) ** 2 + (player.y - cyTop) ** 2 < r2) || ((player.x - cx) ** 2 + (player.y - cyBot) ** 2 < r2);
+      const radiusSq = player.r * player.r;
+      return (player.x - cx) ** 2 + (player.y - cyTop) ** 2 < radiusSq ||
+        (player.x - cx) ** 2 + (player.y - cyBot) ** 2 < radiusSq;
     }
 
-    function drawBarn() {
-      const g = ctx.createLinearGradient(0, 0, 0, PLAY_H);
-      g.addColorStop(0, '#4A2511'); g.addColorStop(.4, '#9A3412'); g.addColorStop(1, '#78350F');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, PLAY_H);
-      const bayW = 430, off = (scrollX * .25) % bayW;
-      for (let bx = -off - bayW; bx < W + bayW; bx += bayW) {
-        ctx.fillStyle = '#BAE6FD'; ctx.beginPath(); ctx.roundRect(bx + 120, 72, 180, 145, 10); ctx.fill();
-        ctx.fillStyle = '#84CC16'; ctx.beginPath(); ctx.moveTo(bx + 120, 217); ctx.quadraticCurveTo(bx + 210, 175, bx + 300, 217); ctx.fill();
-        ctx.strokeStyle = '#3F1D0B'; ctx.lineWidth = 7; ctx.strokeRect(bx + 120, 72, 180, 145);
-      }
-      ctx.fillStyle = '#EAB308'; ctx.fillRect(0, PLAY_H, W, 20);
-      ctx.fillStyle = '#78350F'; ctx.fillRect(0, PLAY_H + 20, W, GROUND_H - 20);
-    }
-
-    function drawBathroom() {
-      const g = ctx.createLinearGradient(0, 0, 0, PLAY_H);
-      g.addColorStop(0, '#E0F2FE'); g.addColorStop(1, '#CCFBF1');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, PLAY_H);
-      const bayW = 500, off = (scrollX * .34) % bayW;
-      for (let bx = -off - bayW; bx < W + bayW; bx += bayW) {
-        const sx = bx + 60, sy = PLAY_H - 300;
-        ctx.fillStyle = '#99F6E4'; ctx.beginPath(); ctx.roundRect(sx, sy, 200, 300, 10); ctx.fill();
-        ctx.strokeStyle = '#64748B'; ctx.lineWidth = 5; ctx.strokeRect(sx, sy, 200, 300);
-      }
-      const tileW = 56, offT = scrollX % (tileW * 2);
-      for (let i = 0, x = -offT - tileW * 2; x < W + tileW * 2; x += tileW, i++) {
-        ctx.fillStyle = i % 2 === 0 ? '#0EA5E9' : '#F1F5F9'; ctx.fillRect(x, PLAY_H, tileW, GROUND_H);
-      }
-    }
-
-    function drawPitchfork(cx, tipY, dir) {
-      ctx.save(); ctx.translate(cx, tipY); if (dir === 'down') ctx.scale(1, -1);
-      ctx.fillStyle = '#B45309'; ctx.strokeStyle = '#451A03'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.roundRect(-8, 60, 16, PLAY_H + 40, 4); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#E2E8F0'; ctx.strokeStyle = '#1E293B'; ctx.beginPath(); ctx.roundRect(-28, 44, 56, 12, 5); ctx.fill(); ctx.stroke();
-      [-26,-9,9,26].forEach(tx => { ctx.beginPath(); ctx.moveTo(tx,0); ctx.lineTo(tx+4,46); ctx.lineTo(tx-4,46); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+    function drawCloud(x, y, scale = 1) {
+      ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
+      ctx.fillStyle = 'rgba(255,255,255,.78)';
+      ctx.beginPath(); ctx.arc(0, 10, 20, Math.PI, 0); ctx.arc(24, 0, 27, Math.PI, 0);
+      ctx.arc(51, 10, 19, Math.PI, 0); ctx.lineTo(70, 18); ctx.lineTo(-19, 18); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
 
-    function drawToilet(cx, edgeY, dir) {
-      ctx.save(); ctx.translate(cx, edgeY); if (dir === 'down') ctx.scale(1, -1);
-      ctx.fillStyle = '#94A3B8'; ctx.strokeStyle = '#334155'; ctx.lineWidth = 2; ctx.fillRect(-16,84,32,PLAY_H+40); ctx.strokeRect(-16,84,32,PLAY_H+40);
-      ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.roundRect(-30,4,26,54,6); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-10,32,42,40,12); ctx.fill(); ctx.stroke(); ctx.restore();
+    function drawBarn() {
+      const sky = ctx.createLinearGradient(0, 0, 0, PLAY_H);
+      sky.addColorStop(0, '#60c7f2'); sky.addColorStop(.68, '#c9efff'); sky.addColorStop(1, '#f4e3a5');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, PLAY_H);
+
+      // Warm afternoon sun and slowly drifting clouds.
+      ctx.fillStyle = 'rgba(255,239,160,.95)'; ctx.beginPath(); ctx.arc(710, 94, 39, 0, Math.PI * 2); ctx.fill();
+      drawCloud(90 - (scrollX * .08 % 980), 92, .9);
+      drawCloud(490 - (scrollX * .06 % 1000), 145, .68);
+      drawCloud(880 - (scrollX * .07 % 1100), 72, .78);
+
+      // Layered green hills create depth behind the farm.
+      ctx.fillStyle = '#8bcf73'; ctx.beginPath(); ctx.moveTo(0, 306);
+      for (let x = 0; x <= W; x += 20) ctx.lineTo(x, 294 + Math.sin((x + scrollX * .12) / 95) * 21);
+      ctx.lineTo(W, PLAY_H); ctx.lineTo(0, PLAY_H); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#62ad51'; ctx.beginPath(); ctx.moveTo(0, 340);
+      for (let x = 0; x <= W; x += 20) ctx.lineTo(x, 326 + Math.sin((x + scrollX * .2) / 115) * 23);
+      ctx.lineTo(W, PLAY_H); ctx.lineTo(0, PLAY_H); ctx.closePath(); ctx.fill();
+
+      // Small red barn with roof, doors, and a round hayloft window.
+      const barnX = 555 - (scrollX * .12 % 1120);
+      ctx.fillStyle = '#a83d32'; ctx.fillRect(barnX, 220, 146, 112);
+      ctx.fillStyle = '#71352f'; ctx.beginPath(); ctx.moveTo(barnX - 13, 222); ctx.lineTo(barnX + 73, 163); ctx.lineTo(barnX + 159, 222); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f2d394'; ctx.beginPath(); ctx.arc(barnX + 73, 205, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#73352e'; ctx.fillRect(barnX + 43, 268, 60, 64);
+      ctx.strokeStyle = '#f2d394'; ctx.lineWidth = 4; ctx.strokeRect(barnX + 47, 272, 52, 60);
+      ctx.beginPath(); ctx.moveTo(barnX + 47, 272); ctx.lineTo(barnX + 99, 332); ctx.moveTo(barnX + 99, 272); ctx.lineTo(barnX + 47, 332); ctx.stroke();
+
+      // Golden crop rows in the foreground farmland.
+      ctx.fillStyle = '#4d963e'; ctx.fillRect(0, 350, W, PLAY_H - 350);
+      ctx.fillStyle = '#d9ae45';
+      for (let row = 0; row < 5; row++) {
+        const y = 375 + row * 37;
+        ctx.fillRect(0, y, W, 3);
+        const offset = (scrollX * (.7 + row * .08)) % 46;
+        for (let x = -46 + offset; x < W + 46; x += 46) {
+          ctx.strokeStyle = row % 2 ? '#f3d16a' : '#c89735'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x, y - 10); ctx.lineTo(x + 8, y + 1); ctx.moveTo(x + 8, y + 1); ctx.lineTo(x + 16, y - 10); ctx.stroke();
+        }
+      }
+      ctx.fillStyle = '#e8c35b'; ctx.fillRect(0, PLAY_H, W, 12);
+      ctx.fillStyle = '#568d3e'; ctx.fillRect(0, PLAY_H + 12, W, GROUND_H - 12);
+      ctx.fillStyle = 'rgba(255,255,255,.17)';
+      for (let x = -20 - (scrollX % 38); x < W; x += 38) ctx.fillRect(x, PLAY_H + 23, 18, 3);
+    }
+
+    function drawBathroom() {
+      const bg = ctx.createLinearGradient(0, 0, 0, PLAY_H);
+      bg.addColorStop(0, '#dff5ff'); bg.addColorStop(1, '#b8e9e2');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, PLAY_H);
+
+      // Bright tiled walls, glass shower panels and chrome fixtures.
+      const tile = 72, off = scrollX * .18 % tile;
+      ctx.strokeStyle = 'rgba(59,130,148,.16)'; ctx.lineWidth = 1;
+      for (let x = -tile - off; x < W + tile; x += tile) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, PLAY_H); ctx.stroke();
+      }
+      for (let y = 48; y < PLAY_H; y += 48) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      const bayW = 510, panelOffset = scrollX * .24 % bayW;
+      for (let bx = -panelOffset - bayW; bx < W + bayW; bx += bayW) {
+        const x = bx + 66, y = 75;
+        ctx.fillStyle = 'rgba(106,225,213,.2)'; ctx.fillRect(x, y, 190, 250);
+        ctx.strokeStyle = 'rgba(71,110,126,.65)'; ctx.lineWidth = 4; ctx.strokeRect(x, y, 190, 250);
+        ctx.fillStyle = '#94a3b8'; ctx.fillRect(x + 26, y + 18, 42, 5);
+        ctx.beginPath(); ctx.moveTo(x + 68, y + 20); ctx.lineTo(x + 68, y + 38); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2;
+        for (let drop = 0; drop < 6; drop++) {
+          const dx = x + 47 + drop * 13, dy = y + 62 + ((time * 90 + drop * 29) % 120);
+          ctx.beginPath(); ctx.moveTo(dx, dy); ctx.lineTo(dx - 2, dy + 12); ctx.stroke();
+        }
+      }
+      const tileW = 56, tileOffset = scrollX % (tileW * 2);
+      for (let i = 0, x = -tileOffset - tileW * 2; x < W + tileW * 2; x += tileW, i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#0ea5e9' : '#f1f5f9'; ctx.fillRect(x, PLAY_H, tileW, GROUND_H);
+        ctx.strokeStyle = 'rgba(15,23,42,.12)'; ctx.strokeRect(x, PLAY_H, tileW, GROUND_H);
+      }
+    }
+
+    function drawPitchfork(cx, edgeY, fromTop) {
+      ctx.save(); ctx.translate(cx, edgeY); ctx.scale(1, fromTop ? -1 : 1);
+      // Wooden handle and a polished four-prong head.
+      ctx.fillStyle = '#b76a2a'; ctx.strokeStyle = '#633719'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(-7, 42, 14, PLAY_H + 30, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#64748b'; ctx.strokeStyle = '#263445';
+      ctx.beginPath(); ctx.roundRect(-29, 29, 58, 13, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e2e8f0';
+      [-24,-8,8,24].forEach((x) => {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 4, 33); ctx.lineTo(x - 4, 33); ctx.closePath(); ctx.fill(); ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    function drawToilet(cx, edgeY, fromTop) {
+      ctx.save();
+      ctx.translate(cx, edgeY);
+      // The fixture grows away from the flight gap: up for the top pipe, down for the lower one.
+      ctx.scale(1, fromTop ? -1 : 1);
+      ctx.lineJoin = 'round';
+
+      // Soft shadow gives the porcelain a little depth.
+      ctx.fillStyle = 'rgba(35,76,88,.18)';
+      ctx.beginPath(); ctx.ellipse(2, 44, 38, 17, 0, 0, Math.PI * 2); ctx.fill();
+
+      // Cistern and flush button, behind the bowl.
+      const porcelain = ctx.createLinearGradient(-34, 0, 28, 0);
+      porcelain.addColorStop(0, '#dbeafe'); porcelain.addColorStop(.35, '#ffffff'); porcelain.addColorStop(1, '#cbd5e1');
+      ctx.fillStyle = porcelain; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.roundRect(-36, 48, 34, 56, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#94a3b8'; ctx.beginPath(); ctx.arc(-19, 56, 3, 0, Math.PI * 2); ctx.fill();
+
+      // Tank connector and broad toilet bowl.
+      ctx.fillStyle = porcelain;
+      ctx.beginPath(); ctx.roundRect(-13, 62, 18, 24, 6); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-2, 8); ctx.quadraticCurveTo(27, 8, 34, 27);
+      ctx.quadraticCurveTo(38, 44, 22, 53); ctx.lineTo(16, 72);
+      ctx.quadraticCurveTo(13, 81, 3, 81); ctx.lineTo(-6, 81);
+      ctx.lineTo(-3, 52); ctx.quadraticCurveTo(-24, 44, -25, 28);
+      ctx.quadraticCurveTo(-25, 12, -2, 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      // Oval seat and water opening make the fixture unmistakably a toilet.
+      ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.ellipse(3, 12, 31, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#b9e8f2'; ctx.beginPath(); ctx.ellipse(3, 12, 21, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-13, 32); ctx.quadraticCurveTo(1, 39, 20, 32); ctx.stroke();
+      ctx.restore();
     }
 
     function drawChicken() {
       ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.rot);
-      ctx.fillStyle = '#EF4444'; ctx.beginPath(); ctx.arc(2,-20,7,0,Math.PI*2); ctx.arc(9,-18,6,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#FEF9C3'; ctx.strokeStyle = '#78350F'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0,0,21,18,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#F97316'; ctx.beginPath(); ctx.moveTo(18,-4); ctx.lineTo(30,1); ctx.lineTo(18,6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#0F172A'; ctx.beginPath(); ctx.arc(11,-5,3,0,Math.PI*2); ctx.fill(); ctx.restore();
+      ctx.fillStyle = 'rgba(15,23,42,.2)'; ctx.beginPath(); ctx.ellipse(0, 18, 17, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(2, -20, 7, 0, Math.PI * 2); ctx.arc(9, -18, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fef9c3'; ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(0, 0, 21, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.moveTo(18, -4); ctx.lineTo(30, 1); ctx.lineTo(18, 6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(11, -5, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     }
 
     function drawPoo() {
       ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.rot);
-      ctx.fillStyle = '#78350F'; ctx.strokeStyle = '#2A1002'; ctx.lineWidth = 2.2;
-      ctx.beginPath(); ctx.roundRect(-21,5,42,14,7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-16,-6,32,13,6); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(0,-10,10,0,Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(-5,0,4.2,0,Math.PI*2); ctx.arc(6,0,4.2,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#0F172A'; ctx.beginPath(); ctx.arc(-4,0,2,0,Math.PI*2); ctx.arc(7,0,2,0,Math.PI*2); ctx.fill(); ctx.restore();
+      ctx.fillStyle = '#78350f'; ctx.strokeStyle = '#2a1002'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.roundRect(-21, 5, 42, 14, 7); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.roundRect(-16, -6, 32, 13, 6); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, -10, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-5, 0, 4.2, 0, Math.PI * 2); ctx.arc(6, 0, 4.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-4, 0, 2, 0, Math.PI * 2); ctx.arc(7, 0, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     }
 
     function loop(now) {
-      const dt = Math.min((now - lastTs) / 1000, .04); lastTs = now; time += dt;
-      if (state === 'TITLE') { scrollX += 90 * dt; player.y = PLAY_H * .45 + Math.sin(time * 3.2) * 10; }
-      else if (state === 'PLAYING') {
-        const speed = 225 + Math.min(score * 3,85); scrollX += speed * dt;
-        player.vy = Math.min(player.vy + GRAVITY * dt,620); player.y += player.vy * dt;
-        player.rot = player.vy < 0 ? -.4 : Math.min((player.vy / 520)*1.1,1.1);
+      const dt = Math.min((now - lastTs) / 1000, .04);
+      lastTs = now; time += dt;
+      if (state === 'TITLE') {
+        scrollX += 90 * dt;
+        player.y = PLAY_H * .45 + Math.sin(time * 3.2) * 10;
+      } else if (state === 'PLAYING') {
+        const speed = 225 + Math.min(score * 3, 85);
+        scrollX += speed * dt;
+        player.vy = Math.min(player.vy + GRAVITY * dt, 620);
+        player.y += player.vy * dt;
+        player.rot = player.vy < 0 ? -.4 : Math.min((player.vy / 520) * 1.1, 1.1);
         if (player.y - player.r < 6) { player.y = 6 + player.r; player.vy = 0; }
         spawnObstacleIfNeeded();
         for (const obs of obstacles) {
           obs.x -= speed * dt;
-          if (!obs.passed && obs.x + obs.w/2 < player.x) { obs.passed=true; score++; }
-          if (hitsObstacle(obs)) { state='GAME_OVER'; saveScore(score); }
+          if (!obs.passed && obs.x + obs.w / 2 < player.x) { obs.passed = true; score++; }
+          if (hitsObstacle(obs)) { state = 'GAME_OVER'; saveScore(score); }
         }
-        obstacles = obstacles.filter(o => o.x + o.w > -60);
-        if (player.y + player.r >= PLAY_H) { player.y=PLAY_H-player.r; state='GAME_OVER'; saveScore(score); }
+        obstacles = obstacles.filter((obs) => obs.x + obs.w > -60);
+        if (player.y + player.r >= PLAY_H) {
+          player.y = PLAY_H - player.r; state = 'GAME_OVER'; saveScore(score);
+        }
       }
 
-      const dpr = Math.min(window.devicePixelRatio || 1,2);
-      if (canvas.width !== W*dpr) { canvas.width=W*dpr; canvas.height=H*dpr; }
-      ctx.setTransform(dpr,0,0,dpr,0,0);
-      if (mapId==='barn') drawBarn(); else drawBathroom();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (canvas.width !== W * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (mapId === 'barn') drawBarn(); else drawBathroom();
       for (const obs of obstacles) {
-        const cx=obs.x+obs.w/2, topY=obs.gapY-obs.gapH/2, botY=obs.gapY+obs.gapH/2;
-        if (mapId==='barn') { drawPitchfork(cx,topY,'down'); drawPitchfork(cx,botY,'up'); }
-        else { drawToilet(cx,topY,'down'); drawToilet(cx,botY,'up'); }
+        const cx = obs.x + obs.w / 2;
+        const topY = obs.gapY - obs.gapH / 2;
+        const bottomY = obs.gapY + obs.gapH / 2;
+        if (mapId === 'barn') {
+          drawPitchfork(cx, topY, true); drawPitchfork(cx, bottomY, false);
+        } else {
+          drawToilet(cx, topY, true); drawToilet(cx, bottomY, false);
+        }
       }
-      if (mapId==='barn') drawChicken(); else drawPoo();
-      ctx.fillStyle='#FFFFFF'; ctx.font='800 40px system-ui,sans-serif'; ctx.textAlign='center'; ctx.fillText(String(score),W/2,54);
-      if (state !== 'PLAYING') { ctx.font='700 22px system-ui,sans-serif'; ctx.fillText(state==='TITLE'?'Click or Press Space to Start':'Game Over — Click or Space to Retry',W/2,H/2); }
+      if (mapId === 'barn') drawChicken(); else drawPoo();
+
+      ctx.fillStyle = 'rgba(15,23,42,.22)'; ctx.beginPath(); ctx.roundRect(W / 2 - 38, 18, 76, 52, 16); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '800 38px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(score), W / 2, 44);
+      if (state !== 'PLAYING') {
+        ctx.fillStyle = 'rgba(15,23,42,.62)'; ctx.beginPath(); ctx.roundRect(W / 2 - 222, H / 2 - 30, 444, 60, 16); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '700 21px system-ui,sans-serif';
+        ctx.fillText(state === 'TITLE' ? 'Click or Press Space to Start' : 'Game Over — Click or Space to Retry', W / 2, H / 2);
+      }
       requestAnimationFrame(loop);
     }
 
