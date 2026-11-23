@@ -1,0 +1,112 @@
+.back-link {
+  color: #bae6fd;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: #fff;
+}
+
+.pool-main {
+  display: grid;
+  gap: 20px;
+  padding-bottom: 48px;
+}
+
+.pool-panel,
+.pool-table-panel {
+  padding: 20px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+}
+
+.pool-panel h2 {
+  margin-bottom: 14px;
+}
+
+.pool-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pool-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #0f766e, #166534);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pool-button:hover {
+  filter: brightness(1.15);
+}
+
+.pool-button:focus-visible {
+  outline: 3px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+.pool-button[aria-pressed="true"] {
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.65);
+}
+
+.secondary-button {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.pool-help {
+  margin-top: 14px;
+  color: var(--text-muted);
+}
+
+.pool-scoreboard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-bottom: 14px;
+}
+
+#game-status {
+  font-weight: 700;
+}
+
+#player-status {
+  color: var(--text-muted);
+}
+
+.pool-table-frame {
+  width: 100%;
+  padding: clamp(7px, 1.5vw, 14px);
+  border: 4px solid #8a5a32;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6b4225, #3f2718);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+}
+
+#pool-table {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+@media (max-width: 600px) {
+  .pool-panel,
+  .pool-table-panel {
+    padding: 14px;
+  }
+
+  .pool-scoreboard {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>8BALL — Nova Arcade</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="8ball.css" />
+  <script defer src="js/8ball.js"></script>
+</head>
+<body>
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="back-link" href="index.html">← Nova Arcade</a>
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true">🎱</span>
+        <div>
+          <h1>8BALL</h1>
+          <p class="tagline">Pool for two players or against AI</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container pool-main">
+    <section class="pool-panel" aria-label="Game options">
+      <h2>Choose a mode</h2>
+      <div class="pool-options">
+        <button class="pool-button mode-button" id="two-player-mode" type="button" aria-pressed="false">
+          2 Players
+        </button>
+        <button class="pool-button mode-button" id="ai-mode" type="button" aria-pressed="false">
+          Vs AI
+        </button>
+        <button class="pool-button secondary-button" id="new-game" type="button">
+          New game
+        </button>
+      </div>
+      <p class="pool-help">Drag back from the cue ball and release to shoot. Pocket a ball to keep your turn.</p>
+    </section>
+
+    <section class="pool-table-panel" aria-label="8BALL game">
+      <div class="pool-scoreboard">
+        <p id="game-status" role="status" aria-live="polite">Choose a mode to begin.</p>
+        <p id="player-status">Player 1: open · Player 2: open</p>
+      </div>
+      <div class="pool-table-frame">
+        <canvas id="pool-table" width="960" height="480" aria-label="Pool table. Drag from the cue ball to aim and release to shoot.">
+          Your browser does not support canvas.
+        </canvas>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Nova Arcade — 8BALL</p>
+    </div>
+  </footer>
+</body>
+</html>

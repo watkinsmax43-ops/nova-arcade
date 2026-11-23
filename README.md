@@ -1,11 +1,11 @@
-# Nova Arcade — Unblocked Browser Games
+# Nova Arcade
 
-A 100% static HTML, CSS, and Vanilla JavaScript arcade website with 1,000 playable entries. It includes original arcade games, 941 themed challenge variants across eight mini-game mechanics, sandbox/clicker/action games, 20 themed racers, plus skating, soccer, blackjack, brawling, city, stealth, and shop-management games. Entries referencing commercial games are original, unofficial mini-games, not full ports or endorsements.
+A static HTML, CSS, and JavaScript arcade. The current game is 8BALL, playable with two local players or against the AI.
 
 ## Deploy to GitHub Pages (Free)
 
 1. Create a new repository on GitHub (for example, `nova-arcade`).
-2. Upload all files and folders (`index.html`, `style.css`, `README.md`, and the `js/` folder) to the `main` branch.
+2. Upload all files and folders, including `index.html`, `8ball.html`, the CSS files, and the `js/` folder, to the `main` branch.
    - Via Git CLI:
      ```bash
      git init
