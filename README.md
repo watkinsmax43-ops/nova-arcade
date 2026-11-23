@@ -1,6 +1,6 @@
 # Nova Arcade
 
-A static HTML, CSS, and JavaScript arcade. The current game is 8BALL, playable with two local players or against the AI.
+A static HTML, CSS, and JavaScript arcade. The current game is 8 Ball, playable with two local players or against the AI.
 
 ## Deploy to GitHub Pages (Free)
 

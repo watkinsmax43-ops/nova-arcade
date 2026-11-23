@@ -1,141 +1,490 @@
-.back-link {
-  color: #bae6fd;
-  font-weight: 700;
-  text-decoration: none;
-}
+:root {
+      --bg: #080d1a;
+      --panel: #10182d;
+      --panel-light: #1a2542;
+      --border: rgba(255, 255, 255, 0.14);
+      --gold: #facc15;
+      --cyan: #22d3ee;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
 
-.back-link:hover {
-  color: #fff;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-.pool-main {
-  display: grid;
-  gap: 20px;
-  padding-bottom: 48px;
-}
+    body {
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 50% 0%, #1d2d57 0%, #0a1020 55%, #050811 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      user-select: none;
+      overflow-x: hidden;
+    }
 
-.pool-panel,
-.pool-table-panel {
-  padding: 20px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  backdrop-filter: blur(12px);
-}
+    .game-shell {
+      width: min(1040px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-.pool-panel h2 {
-  margin-bottom: 14px;
-}
+    .arcade-back {
+      align-self: flex-start;
+      color: #bae6fd;
+      font-weight: 700;
+      text-decoration: none;
+    }
 
-.pool-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
+    .arcade-back:hover {
+      color: #fff;
+    }
 
-.pool-button {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 10px 16px;
-  color: #fff;
-  background: linear-gradient(135deg, #0f766e, #166534);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
+    /* Top Miniclip-style Player & Controls Header */
+    .hud-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(180deg, #1b2847, #0e1629);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      padding: 8px 14px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+    }
 
-.pool-button:hover {
-  filter: brightness(1.15);
-}
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(7, 11, 22, 0.45);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
 
-.pool-button:focus-visible {
-  outline: 3px solid #7dd3fc;
-  outline-offset: 2px;
-}
+    .player-card.right {
+      flex-direction: row-reverse;
+      text-align: right;
+    }
 
-.pool-button[aria-pressed="true"] {
-  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.65);
-}
+    .player-card.active {
+      border-color: #22c55e;
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.35);
+      background: rgba(20, 83, 45, 0.22);
+    }
 
-.secondary-button {
-  background: rgba(255, 255, 255, 0.12);
-}
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      display: grid;
+      place-items: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
 
-.pool-help {
-  margin-top: 14px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
+    .player-card.right .avatar {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+    }
 
-.power-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: 420px;
-  margin-top: 14px;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
+    .p-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
 
-.shot-power {
-  flex: 1;
-  height: 9px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.28);
-}
+    .p-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
 
-#shot-power-fill {
-  display: block;
-  width: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #34d399, #facc15 68%, #fb7185);
-  transition: width 80ms linear;
-}
+    .player-card.right .p-name-row {
+      justify-content: flex-end;
+    }
 
-.pool-scoreboard {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px 20px;
-  margin-bottom: 14px;
-}
+    .group-badge {
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
 
-#game-status {
-  font-weight: 700;
-}
+    .ball-rack {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      min-height: 18px;
+    }
 
-#player-status {
-  color: var(--text-muted);
-}
+    .player-card.right .ball-rack {
+      justify-content: flex-end;
+    }
 
-.pool-table-frame {
-  width: 100%;
-  padding: clamp(7px, 1.5vw, 14px);
-  border: 4px solid #8a5a32;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #6b4225, #3f2718);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
-}
+    .rack-ball {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      font-size: 8px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      color: #0f172a;
+      box-shadow: inset -2px -2px 3px rgba(0, 0, 0, 0.35);
+      transition: opacity 0.25s, transform 0.25s;
+    }
 
-#pool-table {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 5px;
-  touch-action: none;
-  cursor: crosshair;
-}
+    .rack-ball.potted {
+      opacity: 0.2;
+      transform: scale(0.8);
+    }
 
-@media (max-width: 600px) {
-  .pool-panel,
-  .pool-table-panel {
-    padding: 14px;
-  }
+    /* Center Menu & Spin Control */
+    .center-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
 
-  .pool-scoreboard {
-    flex-direction: column;
-  }
-}
+    .btn-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .pill-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .pill-btn:hover {
+      background: #334155;
+    }
+
+    .pill-btn.active {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    /* Spin Selector Mini-Button + Popup */
+    .spin-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .spin-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 30%, #ffffff, #cbd5e1);
+      border: 2px solid #38bdf8;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    .spin-dot-mini {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .spin-popover {
+      position: absolute;
+      top: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 16px 35px rgba(0, 0, 0, 0.75);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 158px;
+    }
+
+    .spin-pad {
+      width: 106px;
+      height: 106px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ffffff, #d1d5db 75%, #94a3b8);
+      position: relative;
+      cursor: pointer;
+      box-shadow: inset 0 -6px 14px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.5);
+    }
+
+    .spin-crosshair-h, .spin-crosshair-v {
+      position: absolute;
+      background: rgba(15, 23, 42, 0.16);
+      pointer-events: none;
+    }
+    .spin-crosshair-h { left: 10%; right: 10%; top: 50%; height: 1px; }
+    .spin-crosshair-v { top: 10%; bottom: 10%; left: 50%; width: 1px; }
+
+    .spin-dot-big {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ef4444;
+      border: 2px solid #fff;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Play Arena: Left Power Bar + Main Pool Table */
+    .arena-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* Miniclip-style Left Vertical Cue Power Slider */
+    .power-slider-box {
+      width: 56px;
+      height: 390px;
+      background: linear-gradient(180deg, #1b2745, #0c1324);
+      border: 2px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55);
+      flex-shrink: 0;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    .power-slider-box:active {
+      cursor: grabbing;
+    }
+
+    .power-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+    }
+
+    .power-track {
+      position: relative;
+      width: 30px;
+      flex: 1;
+      margin: 6px 0;
+      background: #060a14;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .power-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 0%;
+      background: linear-gradient(180deg, #22c55e 0%, #eab308 55%, #ef4444 100%);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .mini-cue-pull {
+      position: absolute;
+      left: 50%;
+      top: 6px;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 170px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 6%, #f59e0b 6%, #92400e 60%, #1e293b 100%);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+    }
+
+    .power-pct {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #facc15;
+    }
+
+    .table-stage {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 900px;
+    }
+
+    canvas {
+      width: 100%;
+      max-height: calc(100vh - 175px);
+      aspect-ratio: 900 / 485;
+      height: auto;
+      border-radius: 20px;
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.72);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    /* Floating Toast Banner over table */
+    .toast-banner {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(250, 204, 21, 0.55);
+      color: #fef08a;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+      transition: opacity 0.25s;
+      z-index: 15;
+      white-space: nowrap;
+    }
+
+    /* Match End Overlay */
+    .victory-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 9, 20, 0.82);
+      backdrop-filter: blur(6px);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+
+    .victory-card {
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border: 2px solid #facc15;
+      border-radius: 18px;
+      padding: 24px 34px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      max-width: 360px;
+      width: 90%;
+    }
+
+    .victory-card h2 {
+      font-size: 1.55rem;
+      color: #facc15;
+      margin-bottom: 6px;
+    }
+
+    .victory-card p {
+      color: #cbd5e1;
+      font-size: 0.92rem;
+      margin-bottom: 16px;
+    }
+
+    .play-again-btn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: none;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 10px 26px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
+    }
+
+    .footer-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+    }
+
+    .legend-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 16px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 760px) {
+      .hud-header {
+        grid-template-columns: 1fr;
+      }
+      .power-slider-box {
+        height: 240px;
+        width: 44px;
+      }
+    }
