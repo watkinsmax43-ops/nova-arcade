@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlappyBird — Nova Arcade</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #0b0924; color: #0f172a; display: flex; justify-content: center; padding: 24px; }
+    .flappy-shell { width: 100%; max-width: 1180px; }
+    .flappy-back { display: inline-block; margin-bottom: 14px; color: #bae6fd; text-decoration: none; font-weight: 700; }
+    .wrap { display: grid; grid-template-columns: minmax(0, 860px) 300px; gap: 20px; width: 100%; align-items: start; }
+    @media (max-width: 960px) { .wrap { grid-template-columns: 1fr; } }
+    canvas { width: 100%; height: auto; aspect-ratio: 860 / 540; border-radius: 12px; border: 1px solid #334155; background: #0f172a; cursor: pointer; display: block; }
+    .panel { background: rgba(22,28,56,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 16px; color: #f8fafc; }
+    h2 { font-size: 16px; margin: 0 0 10px; }
+    .map-btn { width: 100%; padding: 10px 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #64748b; background: rgba(255,255,255,.08); color: #fff; text-align: left; cursor: pointer; font-weight: 600; }
+    .map-btn.active { border-color: #38bdf8; background: rgba(56,189,248,.16); }
+    .lb-list { list-style: none; padding: 0; margin: 10px 0 0; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; overflow: hidden; }
+    .lb-list li { display: flex; justify-content: space-between; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .lb-list li:last-child { border-bottom: none; }
+    .hint { font-size: 12px; color: #cbd5e1; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="flappy-shell">
+    <a class="flappy-back" href="index.html">← Nova Arcade</a>
+    <div class="wrap">
+      <div>
+        <canvas id="game"></canvas>
+        <div class="hint">Click / Tap / Space / Arrow Up to jump · R to restart</div>
+      </div>
+      <div class="panel">
+        <h2>Select Map</h2>
+        <button class="map-btn active" id="btn-barn">Barnyard Barn (Chicken vs Pitchforks)</button>
+        <button class="map-btn" id="btn-bathroom">Bathroom Blitz (Poo vs Toilets)</button>
+        <h2 style="margin-top: 16px;">High Score Leaderboard</h2>
+        <ul class="lb-list" id="leaderboard"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const lbEl = document.getElementById('leaderboard');
+    const btnBarn = document.getElementById('btn-barn');
+    const btnBath = document.getElementById('btn-bathroom');
+
+    const W = 860, H = 540, GROUND_H = 68, PLAY_H = H - GROUND_H;
+    const GRAVITY = 1480, JUMP_V = -465, OBSTACLE_W = 66, SPACING = 290;
+    const LB_KEY = 'flap_plunge_js_lb';
+
+    let mapId = 'barn';
+    let state = 'TITLE';
+    let score = 0, scrollX = 0, time = 0, lastTs = performance.now();
+    let player = { x: 215, y: PLAY_H * 0.46, vy: 0, r: 15, rot: 0, flap: 0 };
+    let obstacles = [];
+
+    function loadLeaderboard() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LB_KEY) || 'null');
+        if (Array.isArray(saved) && saved.length) return saved;
+      } catch {}
+      return [
+        { name: 'Clara', map: 'Barn', score: 24 },
+        { name: 'Pippa', map: 'Bathroom', score: 21 },
+        { name: 'Barnaby', map: 'Barn', score: 18 },
+      ];
+    }
+
+    function saveScore(points) {
+      if (points <= 0) return;
+      const list = loadLeaderboard();
+      list.push({ name: 'You', map: mapId === 'barn' ? 'Barn' : 'Bathroom', score: points });
+      list.sort((a, b) => b.score - a.score);
+      const top = list.slice(0, 8);
+      localStorage.setItem(LB_KEY, JSON.stringify(top));
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const list = loadLeaderboard();
+      lbEl.innerHTML = list.map((e, i) => `<li><span>#${i + 1} ${e.name} (${e.map})</span><strong>${e.score}</strong></li>`).join('');
+    }
+
+    function resetGame(nextState = 'TITLE') {
+      state = nextState;
+      score = 0;
+      obstacles = [];
+      player = { x: 215, y: PLAY_H * 0.46, vy: 0, r: 15, rot: 0, flap: 0 };
+    }
+
+    function jump() {
+      if (state === 'TITLE' || state === 'GAME_OVER') resetGame('PLAYING');
+      if (state === 'PLAYING') {
+        player.vy = JUMP_V;
+        player.flap = 0.22;
+      }
+    }
+
+    btnBarn.onclick = () => { mapId = 'barn'; btnBarn.classList.add('active'); btnBath.classList.remove('active'); resetGame('TITLE'); };
+    btnBath.onclick = () => { mapId = 'bathroom'; btnBath.classList.add('active'); btnBarn.classList.remove('active'); resetGame('TITLE'); };
+
+    canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); jump(); }
+      else if (e.code === 'KeyR') { resetGame('PLAYING'); jump(); }
+    });
+
+    function spawnObstacleIfNeeded() {
+      const last = obstacles[obstacles.length - 1];
+      if (!last || W - last.x >= SPACING) {
+        const gapH = Math.max(138, 166 - score);
+        const margin = 78 + gapH / 2;
+        const gapY = margin + Math.random() * (PLAY_H - margin * 2);
+        obstacles.push({ x: W + 30, w: OBSTACLE_W, gapY, gapH, passed: false });
+      }
+    }
+
+    function hitsObstacle(obs) {
+      const left = obs.x + 7, right = obs.x + obs.w - 7;
+      const topBottom = obs.gapY - obs.gapH / 2;
+      const botTop = obs.gapY + obs.gapH / 2;
+      const cx = Math.max(left, Math.min(player.x, right));
+      const cyTop = Math.min(player.y, topBottom);
+      const cyBot = Math.max(player.y, botTop);
+      const r2 = player.r * player.r;
+      return ((player.x - cx) ** 2 + (player.y - cyTop) ** 2 < r2) || ((player.x - cx) ** 2 + (player.y - cyBot) ** 2 < r2);
+    }
+
+    function drawBarn() {
+      const g = ctx.createLinearGradient(0, 0, 0, PLAY_H);
+      g.addColorStop(0, '#4A2511'); g.addColorStop(.4, '#9A3412'); g.addColorStop(1, '#78350F');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, PLAY_H);
+      const bayW = 430, off = (scrollX * .25) % bayW;
+      for (let bx = -off - bayW; bx < W + bayW; bx += bayW) {
+        ctx.fillStyle = '#BAE6FD'; ctx.beginPath(); ctx.roundRect(bx + 120, 72, 180, 145, 10); ctx.fill();
+        ctx.fillStyle = '#84CC16'; ctx.beginPath(); ctx.moveTo(bx + 120, 217); ctx.quadraticCurveTo(bx + 210, 175, bx + 300, 217); ctx.fill();
+        ctx.strokeStyle = '#3F1D0B'; ctx.lineWidth = 7; ctx.strokeRect(bx + 120, 72, 180, 145);
+      }
+      ctx.fillStyle = '#EAB308'; ctx.fillRect(0, PLAY_H, W, 20);
+      ctx.fillStyle = '#78350F'; ctx.fillRect(0, PLAY_H + 20, W, GROUND_H - 20);
+    }
+
+    function drawBathroom() {
+      const g = ctx.createLinearGradient(0, 0, 0, PLAY_H);
+      g.addColorStop(0, '#E0F2FE'); g.addColorStop(1, '#CCFBF1');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, PLAY_H);
+      const bayW = 500, off = (scrollX * .34) % bayW;
+      for (let bx = -off - bayW; bx < W + bayW; bx += bayW) {
+        const sx = bx + 60, sy = PLAY_H - 300;
+        ctx.fillStyle = '#99F6E4'; ctx.beginPath(); ctx.roundRect(sx, sy, 200, 300, 10); ctx.fill();
+        ctx.strokeStyle = '#64748B'; ctx.lineWidth = 5; ctx.strokeRect(sx, sy, 200, 300);
+      }
+      const tileW = 56, offT = scrollX % (tileW * 2);
+      for (let i = 0, x = -offT - tileW * 2; x < W + tileW * 2; x += tileW, i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#0EA5E9' : '#F1F5F9'; ctx.fillRect(x, PLAY_H, tileW, GROUND_H);
+      }
+    }
+
+    function drawPitchfork(cx, tipY, dir) {
+      ctx.save(); ctx.translate(cx, tipY); if (dir === 'down') ctx.scale(1, -1);
+      ctx.fillStyle = '#B45309'; ctx.strokeStyle = '#451A03'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(-8, 60, 16, PLAY_H + 40, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#E2E8F0'; ctx.strokeStyle = '#1E293B'; ctx.beginPath(); ctx.roundRect(-28, 44, 56, 12, 5); ctx.fill(); ctx.stroke();
+      [-26,-9,9,26].forEach(tx => { ctx.beginPath(); ctx.moveTo(tx,0); ctx.lineTo(tx+4,46); ctx.lineTo(tx-4,46); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+      ctx.restore();
+    }
+
+    function drawToilet(cx, edgeY, dir) {
+      ctx.save(); ctx.translate(cx, edgeY); if (dir === 'down') ctx.scale(1, -1);
+      ctx.fillStyle = '#94A3B8'; ctx.strokeStyle = '#334155'; ctx.lineWidth = 2; ctx.fillRect(-16,84,32,PLAY_H+40); ctx.strokeRect(-16,84,32,PLAY_H+40);
+      ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.roundRect(-30,4,26,54,6); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-10,32,42,40,12); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+
+    function drawChicken() {
+      ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.rot);
+      ctx.fillStyle = '#EF4444'; ctx.beginPath(); ctx.arc(2,-20,7,0,Math.PI*2); ctx.arc(9,-18,6,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FEF9C3'; ctx.strokeStyle = '#78350F'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.ellipse(0,0,21,18,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#F97316'; ctx.beginPath(); ctx.moveTo(18,-4); ctx.lineTo(30,1); ctx.lineTo(18,6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#0F172A'; ctx.beginPath(); ctx.arc(11,-5,3,0,Math.PI*2); ctx.fill(); ctx.restore();
+    }
+
+    function drawPoo() {
+      ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.rot);
+      ctx.fillStyle = '#78350F'; ctx.strokeStyle = '#2A1002'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.roundRect(-21,5,42,14,7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-16,-6,32,13,6); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(0,-10,10,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(-5,0,4.2,0,Math.PI*2); ctx.arc(6,0,4.2,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#0F172A'; ctx.beginPath(); ctx.arc(-4,0,2,0,Math.PI*2); ctx.arc(7,0,2,0,Math.PI*2); ctx.fill(); ctx.restore();
+    }
+
+    function loop(now) {
+      const dt = Math.min((now - lastTs) / 1000, .04); lastTs = now; time += dt;
+      if (state === 'TITLE') { scrollX += 90 * dt; player.y = PLAY_H * .45 + Math.sin(time * 3.2) * 10; }
+      else if (state === 'PLAYING') {
+        const speed = 225 + Math.min(score * 3,85); scrollX += speed * dt;
+        player.vy = Math.min(player.vy + GRAVITY * dt,620); player.y += player.vy * dt;
+        player.rot = player.vy < 0 ? -.4 : Math.min((player.vy / 520)*1.1,1.1);
+        if (player.y - player.r < 6) { player.y = 6 + player.r; player.vy = 0; }
+        spawnObstacleIfNeeded();
+        for (const obs of obstacles) {
+          obs.x -= speed * dt;
+          if (!obs.passed && obs.x + obs.w/2 < player.x) { obs.passed=true; score++; }
+          if (hitsObstacle(obs)) { state='GAME_OVER'; saveScore(score); }
+        }
+        obstacles = obstacles.filter(o => o.x + o.w > -60);
+        if (player.y + player.r >= PLAY_H) { player.y=PLAY_H-player.r; state='GAME_OVER'; saveScore(score); }
+      }
+
+      const dpr = Math.min(window.devicePixelRatio || 1,2);
+      if (canvas.width !== W*dpr) { canvas.width=W*dpr; canvas.height=H*dpr; }
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      if (mapId==='barn') drawBarn(); else drawBathroom();
+      for (const obs of obstacles) {
+        const cx=obs.x+obs.w/2, topY=obs.gapY-obs.gapH/2, botY=obs.gapY+obs.gapH/2;
+        if (mapId==='barn') { drawPitchfork(cx,topY,'down'); drawPitchfork(cx,botY,'up'); }
+        else { drawToilet(cx,topY,'down'); drawToilet(cx,botY,'up'); }
+      }
+      if (mapId==='barn') drawChicken(); else drawPoo();
+      ctx.fillStyle='#FFFFFF'; ctx.font='800 40px system-ui,sans-serif'; ctx.textAlign='center'; ctx.fillText(String(score),W/2,54);
+      if (state !== 'PLAYING') { ctx.font='700 22px system-ui,sans-serif'; ctx.fillText(state==='TITLE'?'Click or Press Space to Start':'Game Over — Click or Space to Retry',W/2,H/2); }
+      requestAnimationFrame(loop);
+    }
+
+    renderLeaderboard();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
